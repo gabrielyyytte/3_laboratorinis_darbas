@@ -4,33 +4,34 @@ import soundfile as sf
 import pandas as pd
 
 
-def openFile():  # leidžia pasirinki wav faila
-    file_path = easygui.fileopenbox()
-    return file_path
+def openFile():  
+    # leidžia pasirinki wav faila
+    filePath = easygui.fileopenbox()
+    return filePath
 
 
-def stereo(data):
+def leng(data):
     # patikrina ar reiksmei galima rasti ilgi
     return hasattr(data[0], "__len__")
 
 
-def getTmax(data):
-    if (stereo(data)):
+def getMaxValue(data):
+    if (leng(data)):
         data = [item for sublist in data for item in sublist]
     return max(max(data), -min(data))
 
 
 def normalizeValues(data):
-    tmax = getTmax(data)
+    tmax = getMaxValue(data)
 
-    if (stereo(data)):
+    if (leng(data)):
         return [[elem/tmax for elem in sublist] for sublist in data]
     return [elem/tmax for elem in data]
 
 
 def visualization(elements, indexes):
     plt.figure()
-    if (stereo(elements)):
+    if (leng(elements)):
         df = pd.DataFrame({'Left': [sublist[0] for sublist in elements], 'Right': [
                           sublist[1] for sublist in elements]}, index=indexes)
         df.plot()
@@ -38,39 +39,43 @@ def visualization(elements, indexes):
         df = pd.Series(elements, index=indexes)
         df.plot()
 
-    plt.ylabel('Reikšmės')
-    plt.xlabel('Laikas')
+        # y ašis
+    plt.ylabel('Values') 
+        # x ašis
+    plt.xlabel('Time') 
 
-
-def addEcho(sound_data, rate, echo_volume, delay):
-    echo_data = []
+def addEcho(soundData, rate, echoVolume, delay):
+    echoData = []
     # indeksas, nuo kurio pridedamas aidas
-    index_delay = int((delay / 1000) * rate)
+    index_delay = int((delay  * rate)
 
-    for index, value in enumerate(sound_data):
-        if (index < index_delay):  # jei nepasiektas minetas indeksas, aidas nepridedamas
-            echo_data.append(value)  # masyvas uzpildomas pradiniu garsu
+    for index, value in enumerate(soundData):
+         # jei nepasiektas minetas indeksas, aidas nepridedamas
+        if (index < index_delay):  
+             # masyvas uzpildomas pradiniu garsu
+            echoData.append(value) 
         else:
             # gaunama suvelinto garso reiksme
-            delayed_value = sound_data[index-index_delay]
-            echo_data.append(value + echo_volume *
-                             delayed_value)  # masyvas uzpildomas echo pagal formule
+            delayedValue = soundData[index-index_delay]
+            # masyvas uzpildomas echo pagal formule
+            echoData.append(value + echoVolume *
+                             delayedValue)  
 
-    return echo_data
+    return echoData
 
 
-file_path = openFile()
-data, rate = sf.read(file_path)
+filePath = openFile()
+data, rate = sf.read(filePath)
 
-echo_data = addEcho(data, rate, 0.5, 200)
+echoData = addEcho(data, rate, 0.5, 0.2)
 
-normalized_original = normalizeValues(data)
-normalized_echo = normalizeValues(echo_data)
+normalizedOriginal = normalizeValues(data)
+normalizedEcho = normalizeValues(echoData)
 
 indexes = [index/rate for index in range(len(data))]
 
-sf.write('sound_with_echo.wav', echo_data, rate)
+sf.write('sound_with_echo.wav', echoData, rate)
 
-visualization(normalized_original, indexes)
-visualization(normalized_echo, indexes)
+visualization(normalizedOriginal, indexes)
+visualization(normalizedEcho, indexes)
 plt.show()
