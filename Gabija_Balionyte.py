@@ -34,21 +34,21 @@ def visualizeDiagram(title, duration, data, xlabel, ylabel, lineY = None):
         plt.axhline(y=lineY, linewidth=0.2, color="r")
     plt.show() 
 
-def fadeIn(data, rate, duration, step = 0.05): #Garso sumazejimo funkcija
-    dataToFade = int(rate * (duration / 1000)) #Garsas paverciamas milisekundemis
-    iterationLength = int(dataToFade/(1 / step))
+def fadeIn(data, rate, duration, step = 0.05): #Garso nutylimo funkcija
+    dataToFade = int(rate * (duration / 1000)) #Duomenys kurie nutils
+    iterationLength = int(dataToFade/(1 / step)) 
     currentIterationLength = 0
     isStereo = False
     volume = 0
     result = []
     
-    for index in range(len(data)):
+    for index in range(len(data)):              #ciklas kol bus pereita per visa data
         if (currentIterationLength > iterationLength): 
-            volume = volume + step
+            volume = volume + step              #Po truputi didinamas garsas
             currentIterationLength = 0
-        if (volume <= 1):
+        if (volume <= 1):                       #salyga jeigu vis dar garsas yra mazinamas
             if (isStereo):
-                result.append([data[index][0] * volume, data[index][1] * volume])
+                result.append([data[index][0] * volume, data[index][1] * volume]) #garsas mazinamas
             else:
                 result.append(data[index] * volume)
         else:
@@ -61,14 +61,15 @@ def fadeOut(data, rate, duration, step = 0.05):
     return fadeIn(data[::-1], rate, duration, step)[::-1] 
 
 def fadeInOut(data, rate, duration, step = 0.05):
-    fadedIn = fadeIn(data, rate, duration, step)
-    return fadeOut(fadedIn, rate, duration, step)
+    fadedIn = fadeIn(data, rate, duration, step)    #Pirmiausia ivykdomas garsejimas pradzioje
+    return fadeOut(fadedIn, rate, duration, step)   #Lygiai taip pat tik atvirkščiai vykdomas tylimas pabaigoje
 
 filePath = openFile()
-[data, numberOfFrames, sampleRate, duration] = getSignalInfoFromFile(fileath)
+[data, numberOfFrames, sampleRate, duration] = getSignalInfoFromFile(filePath)
 time = 0
 time=input("Iveskite laika milisekundemis: ")
 time=int(time)
+
 fadedInOutData = fadeInOut(data, sampleRate, time)
 sf.write("fade_in_fade_out.wav", fadedInOutData, sampleRate)
 filename = os.path.basename(filePath)
